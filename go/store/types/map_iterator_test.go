@@ -127,3 +127,34 @@ func TestReverseMapIterator(t *testing.T) {
 	test(0, 0, "Iterate in reverse from the first key")
 	test(-1, 0, "Iterate in reverse from before the first day")
 }
+
+func TestReverseMapIteratorFromPartialKey(t *testing.T) {
+	ctx := context.Background()
+	vrw := newTestValueStore()
+	m, err := NewMap(ctx, vrw)
+	require.NoError(t, err)
+
+	me := m.Edit()
+	for i := 1; i <= 9; i++ {
+		tuple, err := NewTuple(vrw.Format(), Int(i), Int(9-i))
+		require.NoError(t, err)
+		me.Set(tuple, NullValue)
+	}
+
+	m, err = me.Map(context.Background())
+	require.NoError(t, err)
+
+	partialTuple, err := NewTuple(vrw.Format(), Int(9))
+	require.NoError(t, err)
+
+	it, err := m.IteratorBackFrom(context.Background(), partialTuple)
+	require.NoError(t, err)
+
+	k, _, err := it.Next(ctx)
+	assert.NoError(t, err)
+
+	testTuple, err := NewTuple(vrw.Format(), Int(9), Int(0))
+	require.NoError(t, err)
+
+	assert.True(t, k.Equals(testTuple))
+}

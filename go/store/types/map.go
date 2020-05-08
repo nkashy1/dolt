@@ -412,6 +412,8 @@ func (m Map) IteratorBackFrom(ctx context.Context, key Value) (MapIterator, erro
 		return nil, err
 	}
 
+	// Brian: key is contained within entry, but it isn't less than or equal to the key as a result
+	// we end up advancing when we don't need to
 	if !isLess && !key.Equals(entry.key) {
 		_, err := cur.advance(ctx)
 
